@@ -30,7 +30,7 @@ def main() -> int:
         for _id, _genre in res.fetchall():
             print(f"{_id:<4} {_genre:<50}")
     else:
-        fetch_string = "SELECT title FROM entries "
+        fetch_string = "SELECT title, id FROM entries "
         if genre_enabled:
             fetch_string += "WHERE "
 
@@ -51,9 +51,31 @@ def main() -> int:
 
         # print(fetch_string)
         res = cur.execute(fetch_string)
-        # print(res.fetchall())
-        title, = res.fetchall()[0]
+
+        # Fetch data and print title
+        title, entry_id = res.fetchall()[0]
         print(f"Title: {title}")
+
+        # Now list issues of game
+        release_select = f"SELECT release_seq, release_year, release_month, release_day FROM releases WHERE entry_id = {entry_id} ORDER BY release_seq;"
+        res = cur.execute(release_select)
+        for seq, year, month, day in res.fetchall():
+            if year is None:
+                year = "UNKNOWN"
+            print(f"Released in {year} by:")
+            publisher_select = f"SELECT label_id FROM publishers WHERE entry_id = {entry_id} AND release_seq = {seq}"
+            res = cur.execute(publisher_select)
+            publishers = res.fetchall()
+            if not publishers:
+                print("Unkown publisher")
+            else:
+                for label_id, in publishers:
+                    labels_select = f"SELECT name FROM labels WHERE id = {label_id};"
+                    res = cur.execute(labels_select)
+                    labels = res.fetchall()
+                    for name, in labels:
+                        print(name)
+
 
     con.close()
 
