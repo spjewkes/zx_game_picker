@@ -17,7 +17,11 @@ def main() -> int:
 
     if args.list_genres:
         res = cur.execute("SELECT * FROM genretypes;")
-        print(res.fetchall())
+        print("ID   Genre")
+        print("---- --------------------------------------------------")
+        for _id, _genre in res.fetchall():
+            print(f"{_id:<4} {_genre:<50}")
+        # print(res.fetchall())
     else:
         res = cur.execute("SELECT title FROM entries ORDER BY RANDOM() LIMIT 1;")
         print(res.fetchall()[0][0])
