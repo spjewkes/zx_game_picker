@@ -10,6 +10,7 @@ def main() -> int:
     parser.add_argument('file', metavar='FILE', type=str, nargs='?', default='ZXDB_sqlite.db', help='Override ZXDB file to use (in SQLite format)')
     parser.add_argument('--list-genres', dest='list_genres', action=argparse.BooleanOptionalAction, help='Lists all available genres along with their IDs')
     parser.set_defaults(list_genres=False)
+    parser.add_argument('--years', dest='years', nargs='+', type=int, help='List of years to select from')
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--genres', dest='genres', nargs='+', type=int, help='List of genres to select from') 
     group.add_argument('--arcade', action='store_true', help='Select from all genres that are arcade games')
@@ -30,10 +31,11 @@ def main() -> int:
         for _id, _genre in res.fetchall():
             print(f"{_id:<4} {_genre:<50}")
     else:
-        fetch_string = "SELECT title, id FROM entries "
-        if genre_enabled:
-            fetch_string += "WHERE "
+        fetch_string = "SELECT entries.title, entries.id, releases.release_seq, releases.release_year, releases.release_month, releases.release_day FROM entries JOIN releases ON entries.id = releases.entry_id "
 
+        where_clauses = list()
+            
+        # Pick genre (if defined)
         genres = list()
         if args.genres:
             genres.extend(args.genres)
@@ -45,7 +47,16 @@ def main() -> int:
             genres.extend([27, 28, 29, 31, 32, 17, 18, 19, 30, 20, 21, 26])
 
         if genre_enabled:
-            fetch_string += "genretype_id IN (" + ",".join(map(str, genres)) + ") "
+            where_clauses.append("entries.genretype_id IN (" + ",".join(map(str, genres)) + ") ")
+
+        # Select years (if defined)
+        if args.years:
+            where_clauses.append("releases.release_year IN (" + ",".join(map(str, args.years)) + ") ")
+
+        # Add where clause (if defined)
+        if where_clauses:
+            fetch_string += "WHERE "
+            fetch_string += "AND ".join(where_clauses)
 
         fetch_string += "ORDER BY RANDOM() LIMIT 1;"
 
@@ -53,28 +64,25 @@ def main() -> int:
         res = cur.execute(fetch_string)
 
         # Fetch data and print title
-        title, entry_id = res.fetchall()[0]
+        title, entry_id, seq, year, month, day = res.fetchall()[0]
         print(f"Title: {title}")
 
         # Now list issues of game
-        release_select = f"SELECT release_seq, release_year, release_month, release_day FROM releases WHERE entry_id = {entry_id} ORDER BY release_seq;"
-        res = cur.execute(release_select)
-        for seq, year, month, day in res.fetchall():
-            if year is None:
-                year = "UNKNOWN"
-            print(f"Released in {year} by:")
-            publisher_select = f"SELECT label_id FROM publishers WHERE entry_id = {entry_id} AND release_seq = {seq}"
-            res = cur.execute(publisher_select)
-            publishers = res.fetchall()
-            if not publishers:
-                print("Unkown publisher")
-            else:
-                for label_id, in publishers:
-                    labels_select = f"SELECT name FROM labels WHERE id = {label_id};"
-                    res = cur.execute(labels_select)
-                    labels = res.fetchall()
-                    for name, in labels:
-                        print(name)
+        if year is None:
+            year = "UNKNOWN"
+        print(f"Released in {year} by:")
+        publisher_select = f"SELECT label_id FROM publishers WHERE entry_id = {entry_id} AND release_seq = {seq}"
+        res = cur.execute(publisher_select)
+        publishers = res.fetchall()
+        if not publishers:
+            print("Unkown publisher")
+        else:
+            for label_id, in publishers:
+                labels_select = f"SELECT name FROM labels WHERE id = {label_id};"
+                res = cur.execute(labels_select)
+                labels = res.fetchall()
+                for name, in labels:
+                    print(name)
 
 
     con.close()
