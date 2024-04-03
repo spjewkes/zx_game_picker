@@ -31,4 +31,7 @@ zx-picker.py --genre 32
 
 ## Requirements
 
-This project does not contain the ZXDB. This will need to be downloaded from [ZXDB GitHub Project](https://github.com/zxdb/ZXDB). As this script requires a SQLite3 database the conversion script will need to be run and the resultant script can then be used to generate the database. By default, this program expects to find the database (named 'ZXDB_sqlite.db') in the same directory as the script.
+This project does not contain the ZXDB. This will need to be downloaded from [ZXDB GitHub Project](https://github.com/zxdb/ZXDB). As this Python program requires an SQLite3 database the conversion script will need to be run and the resultant SQL script can then be used to generate the database.
+
+By default this program expects to find the database (named 'ZXDB_sqlite.db') in the same directory as the script. Alternatively the database file can be passed into the program.
+
