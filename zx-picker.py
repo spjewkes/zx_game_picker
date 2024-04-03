@@ -85,7 +85,6 @@ def main() -> int:
         print(f"Title: '{title}'")
 
         # Now display date of pblication
-        print("Release date: ", end='')
         if year is None:
             released = "UNKNOWN"
         else:
@@ -94,21 +93,21 @@ def main() -> int:
             if day is None:
                 day = "??"
             released = f"{day:2}/{month:2}/{year}"
-        print(released)
+        print(f"Released: {released}")
 
         # Now print publisher
         publisher_select = f"SELECT label_id FROM publishers WHERE entry_id = {entry_id} AND release_seq = {seq}"
         res = cur.execute(publisher_select)
         publishers = res.fetchall()
         if not publishers:
-            print("Unkown publisher")
+            publishers = "UNKNOWN"
         else:
             for label_id, in publishers:
                 labels_select = f"SELECT name FROM labels WHERE id = {label_id};"
                 res = cur.execute(labels_select)
                 labels = res.fetchall()
-                for name, in labels:
-                    print(name)
+                publishers = ",".join([name for name, in labels])
+        print(f"Publisher(s): {publishers}")
 
     con.close()
 
