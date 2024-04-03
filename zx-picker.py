@@ -82,12 +82,21 @@ def main() -> int:
 
         # Fetch data and print title
         title, entry_id, seq, year, month, day = res.fetchall()[0]
-        print(f"Title: {title}")
+        print(f"Title: '{title}'")
 
-        # Now list issues of game
+        # Now display date of pblication
+        print("Release date: ", end='')
         if year is None:
-            year = "UNKNOWN"
-        print(f"Released in {year} by:")
+            released = "UNKNOWN"
+        else:
+            if month is None:
+                month = "??"
+            if day is None:
+                day = "??"
+            released = f"{day:2}/{month:2}/{year}"
+        print(released)
+
+        # Now print publisher
         publisher_select = f"SELECT label_id FROM publishers WHERE entry_id = {entry_id} AND release_seq = {seq}"
         res = cur.execute(publisher_select)
         publishers = res.fetchall()
